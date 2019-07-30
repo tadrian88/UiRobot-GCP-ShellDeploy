@@ -95,8 +95,9 @@ def GenerateConfig(context):
  #       subnetwork = RegionalComputeUrl(
 #            project, region, 'subnetworks', context.properties['subnetwork'])
     # Network
-    network = RegionalComputeUrl(
-        project, region, 'networks', context.properties['network'])
+
+    network = GlobalComputeUrl(
+        project, 'networks', context.properties['network'])
     subnetwork = RegionalComputeUrl(
         project, region, 'subnetworks', context.properties['subnetwork'])
     # Public IP
@@ -170,8 +171,9 @@ def GenerateConfig(context):
             }],
             'networkInterfaces': [{
                 'network': network,
-                'accessConfigs': networking,
-                'subnetwork': subnetwork
+                'subnetwork': subnetwork,
+                'accessConfigs': networking
+
             }],
             "tags": network_tags,
             'disks': disks
