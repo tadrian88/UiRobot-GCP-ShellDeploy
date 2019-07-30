@@ -2,25 +2,26 @@ imports:
   - path: vm.py
 
 resources:
-  - name: uirobot
+  - name: uirobotx
     type: vm.py
     properties:
-      instanceName: VM_NAME
-      instanceType: MACHINE_TYPE
-      zone: ZONE
-      subnetwork: SUBNETWORK
-      windowsImage: IMAGE_FAMILY
+      instanceName: uirobot02xcas
+      instanceType: n1-standard-8
+      zone: europe-west3-a
+      network: default
+      subnetwork: default
+      windowsImage: windows-server-2016-dc-v20190709
       windowsImageProject: windows-cloud
-      publicIP: [No | Yes]
-      networkTag: TAG
-      storageSize: storageSize
-      vm_username: vm_username
-      vm_password: vm_password
-      orchestrator_url: orchestrator_url
-      orchestrator_tennant: orchestrator_tennant
-      orchestrator_admin: orchestrator_admin
-      orchestrator_adminpw: orchestrator_adminpw
-      robot_type: robot_type
+      publicIP: Yes
+      networkTag: e-test
+      #storageSize: 8
+      vm_username: uirobot
+      vm_password: vsavbasvasdasd
+      orchestrator_url: https://orc.net/
+      orchestrator_tennant: default
+      orchestrator_admin: admin
+      orchestrator_adminpw: vsad32rfsdf
+      robot_type: Unattended
     # --- Advanced Options ---
     # The following advanced options are not usually needed. To use an advanced option, remove
     # the comment indicator, #, before the parameter name and specify an appropriate value.

@@ -54,50 +54,53 @@ def GenerateConfig(context):
         ',') if len(str(context.properties.get('networkTag', ''))) else []}
     service_account = str(context.properties.get(
         'serviceAccount', context.env['project_number'] + '-compute@developer.gserviceaccount.com'))
-    primary_startup_script = """
-if(![System.IO.File]::Exists("C:\Program Files\Google\Compute Engine\metadata_scripts\createRobotUser")){
-    $UserName="{vm_username}"
-    $Password="{vm_password}"
-    $Computer = [ADSI]"WinNT://$Env:COMPUTERNAME,Computer"
-    $User = $Computer.Create("User", $UserName)
-    $User.SetPassword("$Password")
+    primary_startup = """if(![System.IO.File]::Exists('C:\Program Files\Google\Compute Engine\metadata_scripts\createRobotUser')){{
+    $UserName= "{vm_username}"
+    $Password= "{vm_password}"
+    $Computer = [ADSI]'WinNT://$Env:COMPUTERNAME,Computer'
+    $User = $Computer.Create('User', $UserName)
+    $User.SetPassword('$Password')
     $User.SetInfo()
     $User.FullName = "{vm_username}"
     $User.SetInfo()
-    $User.Put("Description", "UiPath Robot Admin Account")
+    $User.Put('Description', 'UiPath Robot Admin Account')
     $User.SetInfo()
     $User.UserFlags = 65536
     $User.SetInfo()
-    $Group = [ADSI]("WinNT://$Env:COMPUTERNAME/Remote Desktop Users,Group")
-    $Group.add("WinNT://$Env:COMPUTERNAME/$UserName")
-    $admin = [ADSI]("WinNT://./administrator, user")
+    $Group = [ADSI]('WinNT://$Env:COMPUTERNAME/Remote Desktop Users,Group')
+    $Group.add('WinNT://$Env:COMPUTERNAME/$UserName')
+    $admin = [ADSI]('WinNT://./administrator, user')
     $admin.SetPassword("{vm_password}")
-    New-Item "C:\Program Files\Google\Compute Engine\metadata_scripts\createRobotUser" -type file
-    }
-
-    if(![System.IO.File]::Exists("C:\Program Files\Google\Compute Engine\metadata_scripts\installRobot")){
+    New-Item 'C:\Program Files\Google\Compute Engine\metadata_scripts\createRobotUser' -type file
+    }}
+    if(![System.IO.File]::Exists('C:\Program Files\Google\Compute Engine\metadata_scripts\installRobot')){{
     Set-ExecutionPolicy Unrestricted -force
-    Invoke-WebRequest https://raw.githubusercontent.com/hteo1337/UiRobot/master/Setup/Install-UiRobot.ps1 -OutFile "C:\Program Files\Google\Compute Engine\metadata_scripts\Install-UiRobot.ps1"
-    powershell.exe -ExecutionPolicy Bypass -File "C:\Program Files\Google\Compute Engine\metadata_scripts\Install-UiRobot.ps1"  -orchestratorUrl "{orchestrator_url}" -Tennant "{orchestrator_tennant}" -orchAdmin "{orchestrator_admin}" -orchPassword "{orchestrator_adminpw}" -adminUsername "{vm_username}" -machinePassword "{vm_password}" -RobotType "{robot_type}"
-    New-Item "C:\Program Files\Google\Compute Engine\metadata_scripts\installRobot" -type file
-    powershell.exe Remove-Item -Path  "C:\Program Files\Google\Compute Engine\metadata_scripts\Install-UiRobot.ps1" -Force
+    Invoke-WebRequest https://raw.githubusercontent.com/hteo1337/UiRobot/master/Setup/Install-UiRobot.ps1 -OutFile 'C:\Program Files\Google\Compute Engine\metadata_scripts\Install-UiRobot.ps1'
+    powershell.exe -ExecutionPolicy Bypass -File 'C:\Program Files\Google\Compute Engine\metadata_scripts\Install-UiRobot.ps1'  -orchestratorUrl '{orchestrator_url}' -Tennant '{orchestrator_tennant}' -orchAdmin '{orchestrator_admin}' -orchPassword '{orchestrator_adminpw}' -adminUsername '{vm_username}' -machinePassword '{vm_password}' -RobotType '{robot_type}'
+    New-Item 'C:\Program Files\Google\Compute Engine\metadata_scripts\installRobot' -type file
+    powershell.exe Remove-Item -Path  'C:\Program Files\Google\Compute Engine\metadata_scripts\Install-UiRobot.ps1' -Force
     #powershell.exe Start-Sleep -Seconds 10 ; Restart-Computer -Force
-    }
-""" .format(vm_username=context.properties['vm_username'], vm_password=context.properties['vm_password'], orchestrator_url=context.properties['orchestrator_url'], orchestrator_tennant=context.properties['orchestrator_tennant'], orchestrator_admin=context.properties['orchestrator_admin'], orchestrator_adminpw=context.properties['orchestrator_adminpw'], robot_type=context.properties['robot_type'])
-
+    }}"""
+    primary_startup_script = primary_startup.format(vm_username=context.properties['vm_username'], vm_password=context.properties['vm_password'], orchestrator_url=context.properties['orchestrator_url'], orchestrator_tennant=context.properties[
+                                                    'orchestrator_tennant'], orchestrator_admin=context.properties['orchestrator_admin'], orchestrator_adminpw=context.properties['orchestrator_adminpw'], robot_type=context.properties['robot_type'])
     # Get deployment template specific variables from context
-    robot_hdd_size = context.properties['storageSize']
+    #robot_hdd_size = context.properties['storageSize']
 
     # Subnetwork: with SharedVPC support
-    if "/" in context.properties['subnetwork']:
-        sharedvpc = context.properties['subnetwork'].split("/")
-        subnetwork = RegionalComputeUrl(
-            sharedvpc[0], region, 'subnetworks', sharedvpc[1])
-    else:
-        subnetwork = RegionalComputeUrl(
-            project, region, 'subnetworks', context.properties['subnetwork'])
-
+ #   if "/" in context.properties['subnetwork']:
+  #      sharedvpc = context.properties['subnetwork'].split("/")
+ #       subnetwork = RegionalComputeUrl(
+ #           sharedvpc[0], region, 'subnetworks', sharedvpc[1])
+ #   else:
+ #       subnetwork = RegionalComputeUrl(
+#            project, region, 'subnetworks', context.properties['subnetwork'])
+    # Network
+    network = RegionalComputeUrl(
+        project, region, 'networks', context.properties['network'])
+    subnetwork = RegionalComputeUrl(
+        project, region, 'subnetworks', context.properties['subnetwork'])
     # Public IP
+
     if str(context.properties['publicIP']) == "False":
         networking = []
     else:
@@ -122,21 +125,21 @@ if(![System.IO.File]::Exists("C:\Program Files\Google\Compute Engine\metadata_sc
                   }
                   })
 
-    if robot_hdd_size > 0:
-        ui_robot.append({
-            'name': instance_name,
-            'type': 'compute.v1.disk',
-            'properties': {
-                    'zone': zone,
-                    'sizeGb': robot_hdd_size,
-                    'type': ZonalComputeUrl(project, zone, 'diskTypes', 'pd-standard')
-            }
-        })
-        disks.append({'deviceName': instance_name,
-                      'type': 'PERSISTENT',
-                      'source': ''.join(['$(ref.', instance_name, '.selfLink)']),
-                      'autoDelete': True
-                      })
+    # if robot_hdd_size > 0:
+    #     ui_robot.append({
+    #         'name': instance_name + 'r001',
+    #         'type': 'compute.v1.disk',
+    #         'properties': {
+    #                 'zone': zone,
+    #                 'sizeGb': robot_hdd_size,
+    #                 'type': ZonalComputeUrl(project, zone, 'diskTypes', 'pd-standard')
+    #         }
+    #     })
+    #     disks.append({'deviceName': instance_name + 'r002',
+    #                   'type': 'PERSISTENT',
+    #                   'source': ''.join(['$(ref.', instance_name, '.selfLink)']),
+    #                   'autoDelete': True
+    #                   })
 
     # VM instance
     ui_robot.append({
@@ -148,7 +151,7 @@ if(![System.IO.File]::Exists("C:\Program Files\Google\Compute Engine\metadata_sc
                 'machineType': instance_type,
                 'metadata': {
                     'items': [{
-                        'key': 'windows-startup-script-url',
+                        'key': 'windows-startup-script-ps1',
                         'value': primary_startup_script
                     }]
                 },
@@ -166,6 +169,7 @@ if(![System.IO.File]::Exists("C:\Program Files\Google\Compute Engine\metadata_sc
                 ]
             }],
             'networkInterfaces': [{
+                'network': network,
                 'accessConfigs': networking,
                 'subnetwork': subnetwork
             }],

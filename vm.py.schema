@@ -27,7 +27,7 @@ required:
 - subnetwork
 - windowsImage
 - windowsImageProject
-- storageSize
+#- storageSize
 - vm_username
 - vm_password
 - orchestrator_url
@@ -41,6 +41,8 @@ properties:
   zone:
     description: Zone to create the resources in.
     type: string
+    x-googleProperty:
+      type: GCE_ZONE
 
   instanceName:
     description: Hostname of the GCE instance
@@ -50,11 +52,27 @@ properties:
   instanceType:
     description: Machine type to deploy
     type: string
-    pattern: "(n1-highmem-2|n1-highmem-4|n1-highmem-8|n1-highmem-16|n1-highmem-32|n1-highmem-64|n1-standard-2|n1-standard-4|n1-standard-8|n1-standard-16|n1-standard-32|n1-standard-64)"
+    #pattern: "(n1-highmem-2|n1-highmem-4|n1-highmem-8|n1-highmem-16|n1-highmem-32|n1-highmem-64|n1-standard-2|n1-standard-4|n1-standard-8|n1-standard-16|n1-standard-32|n1-standard-64)"
+    x-googleProperty:
+      type: GCE_MACHINE_TYPE
+      zoneProperty: zone
+      gceMachineType:
+      minCpu: 2
+      minRamGb: 4
+  
+  network:
+    type: string
+    x-googleProperty:
+      type: GCE_NETWORK
 
   subnetwork:
     description: The sub network to deploy the instance in.
     type: string
+    x-googleProperty:
+      type: GCE_SUBNETWORK
+      zoneProperty: zone
+      gceSubnetwork:
+      networkProperty: network
 
   windowsImage:
     description: windows image name to use. family/windows-cloud to use the latest Google supplied Windows images
@@ -109,4 +127,4 @@ properties:
   robot_type:
     description: Type of the robot
     type: string
-    pattern: "(Attended|Unattended)"
+    pattern: "(Attended|Unattended|Development|Nonproduction)"
