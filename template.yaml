@@ -5,7 +5,7 @@ resources:
   - name: uirobotx
     type: vm.py
     properties:
-      instanceName: uirobot02xcas
+      instanceName: uirobotgcpm
       instanceType: n1-standard-8
       zone: europe-west3-a
       network: default
